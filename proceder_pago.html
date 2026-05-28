@@ -490,67 +490,67 @@
 
     </div>
 
-   <script>
-    let productosCarrito = [];
-    let costeEnvioActual = 0;
-    const costeSelloCalidad = 2.99; // Sello fijo
+    <script>
+        let productosCarrito = [];
+        let costeEnvioActual = 0;
+        const costeSelloCalidad = 2.99; // Sello fijo
 
-    // Maneja la interacción de los métodos de envío y recalcula
-    function toggleRadio(element, cost) {
-        const parent = element.closest('.shipping-block');
-        parent.querySelectorAll('.shipping-option').forEach(opt => opt.classList.remove('active'));
+        // Maneja la interacción de los métodos de envío y recalcula
+        function toggleRadio(element, cost) {
+            const parent = element.closest('.shipping-block');
+            parent.querySelectorAll('.shipping-option').forEach(opt => opt.classList.remove('active'));
 
-        element.classList.add('active');
-        element.querySelector('input[type="radio"]').checked = true;
+            element.classList.add('active');
+            element.querySelector('input[type="radio"]').checked = true;
 
-        costeEnvioActual = Number(cost);
-        actualizarDesglosePrecios();
-    }
+            costeEnvioActual = Number(cost);
+            actualizarDesglosePrecios();
+        }
 
-    // Realiza los cálculos matemáticos del carrito acumulando todos los items
-    function actualizarDesglosePrecios() {
-        let subtotal = 0;
+        // Realiza los cálculos matemáticos del carrito acumulando todos los items
+        function actualizarDesglosePrecios() {
+            let subtotal = 0;
 
-        // Calcular el subtotal sumando el precio de cada producto por su cantidad
-        productosCarrito.forEach(item => {
-            subtotal += (Number(item.precio) || 0) * (Number(item.cantidad) || 1);
-        });
+            // Calcular el subtotal sumando el precio de cada producto por su cantidad
+            productosCarrito.forEach(item => {
+                subtotal += (Number(item.precio) || 0) * (Number(item.cantidad) || 1);
+            });
 
-        const total = subtotal + costeSelloCalidad + costeEnvioActual;
+            const total = subtotal + costeSelloCalidad + costeEnvioActual;
 
-        document.getElementById("summary-subtotal").innerText = subtotal.toFixed(2).replace('.', ',') + " €";
-        document.getElementById("summary-envio").innerText = costeEnvioActual === 0 ? "Gratis" : costeEnvioActual.toFixed(2).replace('.', ',') + " €";
-        document.getElementById("summary-total").innerText = total.toFixed(2).replace('.', ',') + " €";
-    }
+            document.getElementById("summary-subtotal").innerText = subtotal.toFixed(2).replace('.', ',') + " €";
+            document.getElementById("summary-envio").innerText = costeEnvioActual === 0 ? "Gratis" : costeEnvioActual.toFixed(2).replace('.', ',') + " €";
+            document.getElementById("summary-total").innerText = total.toFixed(2).replace('.', ',') + " €";
+        }
 
-    document.addEventListener("DOMContentLoaded", () => {
-        // 1. LEER LOS PRODUCTOS DEL LOCALSTORAGE
-        productosCarrito = JSON.parse(localStorage.getItem("carrito")) || [];
+        document.addEventListener("DOMContentLoaded", () => {
+            // 1. LEER LOS PRODUCTOS DEL LOCALSTORAGE
+            productosCarrito = JSON.parse(localStorage.getItem("carrito")) || [];
 
-        const contenedorItems = document.getElementById("cart-items-container");
+            const contenedorItems = document.getElementById("cart-items-container");
 
-        // Si el carrito está vacío, mostramos un aviso
-        if (productosCarrito.length === 0) {
-            contenedorItems.innerHTML = `
+            // Si el carrito está vacío, mostramos un aviso
+            if (productosCarrito.length === 0) {
+                contenedorItems.innerHTML = `
                 <div class="empty-cart-message" style="color: var(--color-text-muted); text-align: center; padding: 20px 0;">
                     Tu cesta está vacía. No hay productos para procesar el pago.
                 </div>`;
-            actualizarDesglosePrecios();
-            return;
-        }
+                actualizarDesglosePrecios();
+                return;
+            }
 
-        // Limpiar el contenedor antes de pintar los elementos reales del carrito
-        contenedorItems.innerHTML = "";
+            // Limpiar el contenedor antes de pintar los elementos reales del carrito
+            contenedorItems.innerHTML = "";
 
-        // 2. GENERAR EL HTML DE CADA PRODUCTO DINÁMICAMENTE
-        productosCarrito.forEach(producto => {
-            const tituloProducto = producto.titulo || producto.modelo || 'Producto';
-            const imagenProducto = producto.imagen || producto.imagen_url || '';
-            const estadoTexto = producto.grado || producto.estado || 'Excelente';
-            const cantidadTexto = producto.cantidad > 1 ? ` x${producto.cantidad}` : '';
-            const precioCalculado = ((producto.precio || 0) * (producto.cantidad || 1)).toFixed(2).replace('.', ',');
+            // 2. GENERAR EL HTML DE CADA PRODUCTO DINÁMICAMENTE
+            productosCarrito.forEach(producto => {
+                const tituloProducto = producto.titulo || producto.modelo || 'Producto';
+                const imagenProducto = producto.imagen || producto.imagen_url || '';
+                const estadoTexto = producto.grado || producto.estado || 'Excelente';
+                const cantidadTexto = producto.cantidad > 1 ? ` x${producto.cantidad}` : '';
+                const precioCalculado = ((producto.precio || 0) * (producto.cantidad || 1)).toFixed(2).replace('.', ',');
 
-            const productoHTML = `
+                const productoHTML = `
                 <div class="checkout-product-card" style="display: flex; gap: 16px; align-items: center; padding: 12px 0; border-bottom: 1px dashed #e2e8f0;">
                     <img src="${imagenProducto}" alt="${tituloProducto}" class="checkout-product-img" style="width: 60px; height: 60px; object-fit: contain; border: 1px solid var(--color-border); border-radius: 8px; background: #fff;">
                     <div class="checkout-product-info" style="flex-grow: 1;">
@@ -560,13 +560,44 @@
                     <span style="font-weight: 600; font-size: 0.95rem; white-space: nowrap; text-align: right; min-width: 75px;">${precioCalculado} €</span>
                 </div>
             `;
-            contenedorItems.insertAdjacentHTML("beforeend", productoHTML);
-        });
+                contenedorItems.insertAdjacentHTML("beforeend", productoHTML);
+            });
 
-        // Forzar el primer cálculo con la suma de todo lo recuperado
-        actualizarDesglosePrecios();
-    });
-</script>
+            // Forzar el primer cálculo con la suma de todo lo recuperado
+            actualizarDesglosePrecios();
+        });
+        const botonPago = document.getElementById('tu-boton-pago-seguro');
+
+        botonPago.addEventListener('click', async () => {
+            // Ejemplo de los datos del carrito que tienes acumulados
+            const carrito = [
+                { nombre: 'Producto de prueba 1', precio: 25.00, cantidad: 1 },
+                { nombre: 'Producto de prueba 2', precio: 10.50, cantidad: 2 }
+            ];
+
+            try {
+                // Enviamos el carrito a nuestro backend de Node.js
+                const respuesta = await fetch('/api/create-checkout-session', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ productos: carrito })
+                });
+
+                const datos = await respuesta.json();
+
+                if (datos.url) {
+                    // ¡Aquí ocurre la magia! Redirecciona al usuario a Stripe
+                    window.location.href = datos.url;
+                } else {
+                    alert('Hubo un problema al procesar el pago.');
+                }
+            } catch (error) {
+                console.error('Error:', error);
+            }
+        });
+    </script>
 </body>
 
 </html>
