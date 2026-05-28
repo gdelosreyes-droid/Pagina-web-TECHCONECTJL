@@ -1,41 +1,52 @@
 const express = require('express');
-const app = express();
-// Inicializa Stripe con tu clave secreta de prueba
-const stripe = require('stripe')('TU_CLAVE_SECRETA_SK_TEST_AQUÍ');
+const router = express.Router();
+const stripe = require('stripe')('TU_CLAVE_SECRETA_DE_STRIPE_AQUÍ');
 
-app.use(express.json());
-
-app.post('/api/create-checkout-session', async (req, res) => {
+// Ruta para crear la sesión de pago con tus productos reales
+router.post('/create-checkout-session', async (req, res) => {
     try {
-        // Aquí recibirás los productos que el usuario tiene en el carrito
+        // Recibimos los productos que el usuario tiene en el carrito desde el frontend
         const { productos } = req.body;
 
-        // Mapeamos tus productos al formato que exige Stripe
-        const line_items = productos.map(item => ({
-            price_data: {
-                currency: 'eur', // Moneda (ej: eur, usd)
-                product_data: {
-                    name: item.nombre, // Nombre del producto o "Total Carrito"
-                },
-                unit_amount: item.precio * 100, // Stripe trabaja en céntimos (ej: 10€ = 1000)
-            },
-            quantity: item.cantidad,
-        }));
+        // Mapeamos el array con las columnas exactas de tu base de datos
+        const line_items = productos.map(item => {
+            // Fusionamos marca y modelo para el título de Stripe
+            const nombreProducto = `${item.marca} ${item.modelo}`;
 
-        // Creamos la sesión de Stripe Checkout
+            // Creamos la descripción con los detalles adicionales
+            const descripcionProducto = `Color: ${item.color} | Estado: ${item.estado_grade}`;
+
+            return {
+                price_data: {
+                    currency: 'eur',
+                    product_data: {
+                        name: nombreProducto,
+                        description: descripcionProducto,
+                    },
+                    // Stripe requiere el precio en céntimos enteros (ej: 15.99€ -> 1599)
+                    unit_amount: Math.round(item.precio_euro * 100),
+                },
+                quantity: item.cantidad, // La cantidad de unidades de este producto
+            };
+        });
+
+        // Creamos la sesión de Stripe con tus artículos
         const session = await stripe.checkout.sessions.create({
             payment_method_types: ['card'],
             line_items: line_items,
             mode: 'payment',
-            // Direcciones a las que volverá el cliente tras pagar o cancelar
-            success_url: 'http://localhost:3001/exito.html',
-            cancel_url: 'http://localhost:3001/carrito.html',
+            // Redirecciones cuando termine el proceso
+            success_url: 'http://localhost:8080/exito.html', // Cambia el puerto si tu frontend usa otro
+            cancel_url: 'http://localhost:8080/carrito.html',
         });
 
-        // Devolvemos la URL generada por Stripe al frontend
+        // Devolvemos la URL real de Stripe al frontend
         res.json({ url: session.url });
+
     } catch (error) {
-        console.error("Error al crear la sesión de Stripe:", error);
+        console.error("Error en la pasarela de Stripe:", error);
         res.status(500).json({ error: error.message });
     }
 });
+
+module.exports = router;

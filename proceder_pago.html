@@ -566,35 +566,38 @@
             // Forzar el primer cálculo con la suma de todo lo recuperado
             actualizarDesglosePrecios();
         });
-        const botonPago = document.getElementById('tu-boton-pago-seguro');
+        const botonPagoSeguro = document.getElementById('tu-boton-pago-seguro');
 
-        botonPago.addEventListener('click', async () => {
-            // Ejemplo de los datos del carrito que tienes acumulados
-            const carrito = [
-                { nombre: 'Producto de prueba 1', precio: 25.00, cantidad: 1 },
-                { nombre: 'Producto de prueba 2', precio: 10.50, cantidad: 2 }
-            ];
+        botonPagoSeguro.addEventListener('click', async () => {
+            // Aquí debes capturar el array de productos que el usuario tiene en el carrito.
+            // Es fundamental que los objetos tengan exactamente las propiedades de tu BD:
+            // [
+            //   { marca: 'Samsung', modelo: 'Galaxy S23', precio_euro: 799.00, color: 'Negro', estado_grade: 'A', cantidad: 1 },
+            //   { marca: 'HP', modelo: 'EliteBook', precio_euro: 450.50, color: 'Plata', estado_grade: 'B', cantidad: 1 }
+            // ]
+            const productosEnCarrito = obtenerProductosDelCarrito(); // <--- Aquí usas tu función actual del carrito
 
             try {
-                // Enviamos el carrito a nuestro backend de Node.js
-                const respuesta = await fetch('/api/create-checkout-session', {
+                // Enviamos tus productos reales al backend
+                const response = await fetch('/api/create-checkout-session', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
                     },
-                    body: JSON.stringify({ productos: carrito })
+                    body: JSON.stringify({ productos: productosEnCarrito })
                 });
 
-                const datos = await respuesta.json();
+                const data = await response.json();
 
-                if (datos.url) {
-                    // ¡Aquí ocurre la magia! Redirecciona al usuario a Stripe
-                    window.location.href = datos.url;
+                if (data.url) {
+                    // Redireccionamos al usuario a la pantalla de pago segura de Stripe
+                    window.location.href = data.url;
                 } else {
-                    alert('Hubo un problema al procesar el pago.');
+                    alert('No se pudo procesar la sesión de pago.');
                 }
             } catch (error) {
-                console.error('Error:', error);
+                console.error('Error al conectar con el servidor:', error);
+                alert('Ocurrió un error al intentar pagar.');
             }
         });
     </script>
