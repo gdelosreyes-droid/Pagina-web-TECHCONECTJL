@@ -740,7 +740,7 @@
         /* GRID DE PRODUCTOS */
         .products-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 350px));
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
             gap: 24px;
             max-width: 1320px;
             margin: 40px auto;
@@ -1426,274 +1426,274 @@
 
         // ── ESTADO DE FILTROS ACTIVOS ──
         // ── ESTADO DE FILTROS ACTIVOS ──
-const filtros = {
-    precioMin: 0,
-    precioMax: 9999,
-    grado: null,
-    marca: null,
-    almacenamiento: null
-};
+        const filtros = {
+            precioMin: 0,
+            precioMax: 9999,
+            grado: null,
+            marca: null,
+            almacenamiento: null
+        };
 
-// ── LEER DATOS DE CADA TARJETA Y FILTRAR ──
-function aplicarFiltros() {
-    const cards = document.querySelectorAll('.product-card');
-    let visibles = 0;
+        // ── LEER DATOS DE CADA TARJETA Y FILTRAR ──
+        function aplicarFiltros() {
+            const cards = document.querySelectorAll('.product-card');
+            let visibles = 0;
 
-    cards.forEach(card => {
-        const precio = parseFloat(card.dataset.precio);
-        const marca = card.dataset.marca;
-        const almacenamiento = card.dataset.almacenamiento;
+            cards.forEach(card => {
+                const precio = parseFloat(card.dataset.precio);
+                const marca = card.dataset.marca;
+                const almacenamiento = card.dataset.almacenamiento;
 
-        // --- LOGICA DE GRADO CORREGIDA Y FLEXIBLE ---
-        const gradoTarjeta = card.dataset.grado ? card.dataset.grado.toLowerCase().replace(/grade\s+|grado\s+/g, '').trim() : '';
-        const gradoFiltro = filtros.grado ? filtros.grado.toLowerCase().replace(/grade\s+|grado\s+/g, '').trim() : '';
+                // --- LOGICA DE GRADO CORREGIDA Y FLEXIBLE ---
+                const gradoTarjeta = card.dataset.grado ? card.dataset.grado.toLowerCase().replace(/grade\s+|grado\s+/g, '').trim() : '';
+                const gradoFiltro = filtros.grado ? filtros.grado.toLowerCase().replace(/grade\s+|grado\s+/g, '').trim() : '';
 
-        const pasaPrecio = precio >= filtros.precioMin && precio <= filtros.precioMax;
-        const pasaMarca = !filtros.marca || marca === filtros.marca;
-        const pasaAlmacenamiento = !filtros.almacenamiento || almacenamiento === filtros.almacenamiento;
+                const pasaPrecio = precio >= filtros.precioMin && precio <= filtros.precioMax;
+                const pasaMarca = !filtros.marca || marca === filtros.marca;
+                const pasaAlmacenamiento = !filtros.almacenamiento || almacenamiento === filtros.almacenamiento;
 
-        // Comparamos los grados normalizados (ej: "a" === "a")
-        const pasaGrado = !filtros.grado || gradoTarjeta === gradoFiltro;
+                // Comparamos los grados normalizados (ej: "a" === "a")
+                const pasaGrado = !filtros.grado || gradoTarjeta === gradoFiltro;
 
-        if (pasaPrecio && pasaGrado && pasaMarca && pasaAlmacenamiento) {
-            card.style.display = 'flex';
-            visibles++;
-        } else {
-            card.style.display = 'none';
+                if (pasaPrecio && pasaGrado && pasaMarca && pasaAlmacenamiento) {
+                    card.style.display = ''; // 🌟 Deja que el CSS original controle la posición
+                    visibles++;
+                } else {
+                    card.style.display = 'none';
+                }
+            });
+
+            // 🌟 CORRECCIÓN: El control de 'no-results' DEBE estar dentro de la función para conocer el valor de 'visibles'
+            let noResults = document.getElementById('no-results');
+            if (visibles === 0) {
+                if (!noResults) {
+                    noResults = document.createElement('p');
+                    noResults.id = 'no-results';
+                    noResults.style.cssText = 'text-align:center; color:var(--muted); padding:40px; width:100%; grid-column:1/-1;';
+                    noResults.textContent = 'No hay productos que coincidan con los filtros seleccionados.';
+                    document.querySelector('.products-grid').appendChild(noResults);
+                }
+            } else {
+                if (noResults) noResults.remove();
+            }
         }
-    });
 
-    // 🌟 CORRECCIÓN: El control de 'no-results' DEBE estar dentro de la función para conocer el valor de 'visibles'
-    let noResults = document.getElementById('no-results');
-    if (visibles === 0) {
-        if (!noResults) {
-            noResults = document.createElement('p');
-            noResults.id = 'no-results';
-            noResults.style.cssText = 'text-align:center; color:var(--muted); padding:40px; width:100%; grid-column:1/-1;';
-            noResults.textContent = 'No hay productos que coincidan con los filtros seleccionados.';
-            document.querySelector('.products-grid').appendChild(noResults);
+        // ── FILTRO DE PRECIO (CORREGIDO PARA EVITAR NEGATIVOS) ──
+        const rangeMin = document.querySelector('.range-min');
+        const rangeMax = document.querySelector('.range-max');
+        const inputMin = document.querySelector('.input-min');
+        const inputMax = document.querySelector('.input-max');
+
+        if (rangeMin && rangeMax && inputMin && inputMax) {
+            rangeMin.addEventListener('input', () => {
+                let val = parseInt(rangeMin.value);
+                if (val >= parseInt(rangeMax.value)) val = parseInt(rangeMax.value) - 10;
+                rangeMin.value = val;
+                inputMin.value = val;
+                filtros.precioMin = val;
+            });
+
+            rangeMax.addEventListener('input', () => {
+                let val = parseInt(rangeMax.value);
+                if (val <= parseInt(rangeMin.value)) val = parseInt(rangeMin.value) + 10;
+                rangeMax.value = val;
+                inputMax.value = val;
+                filtros.precioMax = val;
+            });
+
+            inputMin.addEventListener('input', () => {
+                if (parseInt(inputMin.value) < 0 || inputMin.value === "") {
+                    inputMin.value = 0;
+                }
+                rangeMin.value = inputMin.value;
+                filtros.precioMin = parseInt(inputMin.value);
+            });
+
+            inputMax.addEventListener('input', () => {
+                if (parseInt(inputMax.value) < 0 || inputMax.value === "") {
+                    inputMax.value = 0;
+                }
+                rangeMax.value = inputMax.value;
+                filtros.precioMax = parseInt(inputMax.value);
+            });
         }
-    } else {
-        if (noResults) noResults.remove();
-    }
-}
 
-// ── FILTRO DE PRECIO (CORREGIDO PARA EVITAR NEGATIVOS) ──
-const rangeMin = document.querySelector('.range-min');
-const rangeMax = document.querySelector('.range-max');
-const inputMin = document.querySelector('.input-min');
-const inputMax = document.querySelector('.input-max');
-
-if(rangeMin && rangeMax && inputMin && inputMax) {
-    rangeMin.addEventListener('input', () => {
-        let val = parseInt(rangeMin.value);
-        if (val >= parseInt(rangeMax.value)) val = parseInt(rangeMax.value) - 10;
-        rangeMin.value = val;
-        inputMin.value = val;
-        filtros.precioMin = val;
-    });
-
-    rangeMax.addEventListener('input', () => {
-        let val = parseInt(rangeMax.value);
-        if (val <= parseInt(rangeMin.value)) val = parseInt(rangeMin.value) + 10;
-        rangeMax.value = val;
-        inputMax.value = val;
-        filtros.precioMax = val;
-    });
-
-    inputMin.addEventListener('input', () => {
-        if (parseInt(inputMin.value) < 0 || inputMin.value === "") {
-            inputMin.value = 0;
+        // ── CONTROL DE CIERRE AUTOMÁTICO EN EL BOTÓN "VER PRODUCTOS" ──
+        const applyBtn = document.querySelector('.btn-apply-filter');
+        if (applyBtn) {
+            applyBtn.addEventListener('click', () => {
+                aplicarFiltros();
+                const pricePopup = document.querySelector('.price-popup');
+                if (pricePopup) {
+                    pricePopup.classList.add('popup-closed');
+                }
+            });
         }
-        rangeMin.value = inputMin.value;
-        filtros.precioMin = parseInt(inputMin.value);
-    });
 
-    inputMax.addEventListener('input', () => {
-        if (parseInt(inputMax.value) < 0 || inputMax.value === "") {
-            inputMax.value = 0;
+        // ── REINICIAR CUANDO SE VUELVE A PASAR EL RATÓN ──
+        const pricePopupEl = document.querySelector('.price-popup');
+        if (pricePopupEl) {
+            const priceFilterItem = pricePopupEl.closest('.filter-item');
+            if (priceFilterItem) {
+                priceFilterItem.addEventListener('mouseleave', () => {
+                    if (pricePopupEl) {
+                        pricePopupEl.classList.remove('popup-closed');
+                    }
+                });
+            }
         }
-        rangeMax.value = inputMax.value;
-        filtros.precioMax = parseInt(inputMax.value);
-    });
-}
 
-// ── CONTROL DE CIERRE AUTOMÁTICO EN EL BOTÓN "VER PRODUCTOS" ──
-const applyBtn = document.querySelector('.btn-apply-filter');
-if (applyBtn) {
-    applyBtn.addEventListener('click', () => {
-        aplicarFiltros();
-        const pricePopup = document.querySelector('.price-popup');
-        if (pricePopup) {
-            pricePopup.classList.add('popup-closed');
-        }
-    });
-}
+        // ── FILTRO DE GRADO OMNIPRESENTE ──
+        document.querySelectorAll('.grado-item .filter-dropdown a').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
 
-// ── REINICIAR CUANDO SE VUELVE A PASAR EL RATÓN ──
-const pricePopupEl = document.querySelector('.price-popup');
-if (pricePopupEl) {
-    const priceFilterItem = pricePopupEl.closest('.filter-item');
-    if (priceFilterItem) {
-        priceFilterItem.addEventListener('mouseleave', () => {
-            if (pricePopupEl) {
-                pricePopupEl.classList.remove('popup-closed');
+                const deseleccionado = marcarActivo(a, 'grado');
+
+                if (!deseleccionado) {
+                    filtros.grado = a.textContent.trim();
+                } else {
+                    filtros.grado = null;
+                }
+
+                aplicarFiltros();
+
+                a.blur();
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+            });
+        });
+
+        // ── FILTRO DE ALMACENAMIENTO ──
+        document.querySelectorAll('.filter-dropdown a').forEach(a => {
+            if (a.textContent.trim().includes('GB') || a.textContent.trim().includes('TB')) {
+                a.addEventListener('click', e => {
+                    e.preventDefault();
+                    const deseleccionado = marcarActivo(a, 'almacenamiento');
+                    if (!deseleccionado) filtros.almacenamiento = a.textContent.trim();
+                    aplicarFiltros();
+                });
             }
         });
-    }
-}
 
-// ── FILTRO DE GRADO OMNIPRESENTE ──
-document.querySelectorAll('.grado-item .filter-dropdown a').forEach(a => {
-    a.addEventListener('click', e => {
-        e.preventDefault();
-        
-        const deseleccionado = marcarActivo(a, 'grado');
-        
-        if (!deseleccionado) {
-            filtros.grado = a.textContent.trim();
-        } else {
-            filtros.grado = null;
-        }
-        
-        aplicarFiltros();
-        
-        a.blur();
-        if (document.activeElement) {
-            document.activeElement.blur();
-        }
-    });
-});
-
-// ── FILTRO DE ALMACENAMIENTO ──
-document.querySelectorAll('.filter-dropdown a').forEach(a => {
-    if (a.textContent.trim().includes('GB') || a.textContent.trim().includes('TB')) {
-        a.addEventListener('click', e => {
-            e.preventDefault();
-            const deseleccionado = marcarActivo(a, 'almacenamiento');
-            if (!deseleccionado) filtros.almacenamiento = a.textContent.trim();
-            aplicarFiltros();
+        // ── FILTRO DE MARCA (LIMPIEZA RADICAL DE FOCO) ──
+        document.querySelectorAll('.brand-mega-dropdown a').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                const deseleccionado = marcarActivo(a, 'marca');
+                if (!deseleccionado) filtros.marca = a.textContent.trim();
+                aplicarFiltros();
+                a.blur();
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+            });
         });
-    }
-});
 
-// ── FILTRO DE MARCA (LIMPIEZA RADICAL DE FOCO) ──
-document.querySelectorAll('.brand-mega-dropdown a').forEach(a => {
-    a.addEventListener('click', e => {
-        e.preventDefault();
-        const deseleccionado = marcarActivo(a, 'marca');
-        if (!deseleccionado) filtros.marca = a.textContent.trim();
-        aplicarFiltros();
-        a.blur();
-        if (document.activeElement) {
-            document.activeElement.blur();
+        // ── MARCAR ACTIVO O DESACTIVAR SI YA ESTABA SELECCIONADO ──
+        function marcarActivo(el, tipo) {
+            const padre = el.closest('.filter-dropdown, .brand-mega-dropdown');
+            if (filtros[tipo] === el.textContent.trim()) {
+                filtros[tipo] = null;
+                padre.querySelectorAll('a').forEach(a => {
+                    a.style.fontWeight = '';
+                    a.style.color = '';
+                });
+                return true;
+            }
+
+            padre.querySelectorAll('a').forEach(a => {
+                a.style.fontWeight = '';
+                a.style.color = '';
+            });
+            el.style.fontWeight = '800';
+            el.style.color = 'var(--p)';
+            return false;
         }
-    });
-});
 
-// ── MARCAR ACTIVO O DESACTIVAR SI YA ESTABA SELECCIONADO ──
-function marcarActivo(el, tipo) {
-    const padre = el.closest('.filter-dropdown, .brand-mega-dropdown');
-    if (filtros[tipo] === el.textContent.trim()) {
-        filtros[tipo] = null;
-        padre.querySelectorAll('a').forEach(a => {
-            a.style.fontWeight = '';
-            a.style.color = '';
+        /* QUE SE VEA LA SESION INICIADA */
+        document.addEventListener("DOMContentLoaded", function () {
+            const nombreGuardado = localStorage.getItem('usuarioNombre');
+            if (nombreGuardado) {
+                document.getElementById('userProfileBlock').style.display = 'flex';
+                document.getElementById('nombreUsuarioTexto').textContent = nombreGuardado;
+                document.getElementById('avatarLetra').textContent = nombreGuardado.trim().charAt(0);
+            }
         });
-        return true;
-    }
 
-    padre.querySelectorAll('a').forEach(a => {
-        a.style.fontWeight = '';
-        a.style.color = '';
-    });
-    el.style.fontWeight = '800';
-    el.style.color = 'var(--p)';
-    return false;
-}
+        /* CARRITO */
+        document.addEventListener("DOMContentLoaded", () => {
+            actualizarInterfazCarrito();
+        });
 
-/* QUE SE VEA LA SESION INICIADA */
-document.addEventListener("DOMContentLoaded", function () {
-    const nombreGuardado = localStorage.getItem('usuarioNombre');
-    if (nombreGuardado) {
-        document.getElementById('userProfileBlock').style.display = 'flex';
-        document.getElementById('nombreUsuarioTexto').textContent = nombreGuardado;
-        document.getElementById('avatarLetra').textContent = nombreGuardado.trim().charAt(0);
-    }
-});
+        function toggleCart() {
+            const overlay = document.getElementById('cartOverlay');
+            if (overlay) overlay.classList.toggle('open');
+        }
 
-/* CARRITO */
-document.addEventListener("DOMContentLoaded", () => {
-    actualizarInterfazCarrito();
-});
+        function closeCartFromOverlay(event) {
+            toggleCart();
+        }
 
-function toggleCart() {
-    const overlay = document.getElementById('cartOverlay');
-    if(overlay) overlay.classList.toggle('open');
-}
+        function agregarAlCarritoActual() {
+            const titulo = document.querySelector('.product-title').innerText;
+            const imagen = document.querySelector('.main-image-box img').src;
+            const tarjetaActiva = document.querySelector('.grade-option-card.active');
+            const grado = tarjetaActiva.querySelector('.grade-name-text').innerText;
+            const precioTexto = tarjetaActiva.querySelector('.grade-price-indicator').innerText;
+            const precioNumero = parseFloat(precioTexto.replace('.', '').replace(',', '.').replace(' €', ''));
 
-function closeCartFromOverlay(event) {
-    toggleCart();
-}
+            let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
+            const productoExistente = carrito.find(item => item.titulo === titulo && item.grado === grado);
 
-function agregarAlCarritoActual() {
-    const titulo = document.querySelector('.product-title').innerText;
-    const imagen = document.querySelector('.main-image-box img').src;
-    const tarjetaActiva = document.querySelector('.grade-option-card.active');
-    const grado = tarjetaActiva.querySelector('.grade-name-text').innerText;
-    const precioTexto = tarjetaActiva.querySelector('.grade-price-indicator').innerText;
-    const precioNumero = parseFloat(precioTexto.replace('.', '').replace(',', '.').replace(' €', ''));
+            if (productoExistente) {
+                productoExistente.cantidad += 1;
+            } else {
+                const nuevoProducto = {
+                    titulo: titulo,
+                    imagen: imagen,
+                    grado: grado,
+                    precio: precioNumero,
+                    cantidad: 1
+                };
+                carrito.push(nuevoProducto);
+            }
 
-    let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-    const productoExistente = carrito.find(item => item.titulo === titulo && item.grado === grado);
+            localStorage.setItem('carritoTech', JSON.stringify(carrito));
+            actualizarInterfazCarrito();
+            document.getElementById('cartOverlay').classList.add('open');
+        }
 
-    if (productoExistente) {
-        productoExistente.cantidad += 1;
-    } else {
-        const nuevoProducto = {
-            titulo: titulo,
-            imagen: imagen,
-            grado: grado,
-            precio: precioNumero,
-            cantidad: 1
-        };
-        carrito.push(nuevoProducto);
-    }
+        function eliminarDelCarrito(index) {
+            let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
+            carrito.splice(index, 1);
+            localStorage.setItem('carritoTech', JSON.stringify(carrito));
+            actualizarInterfazCarrito();
+        }
 
-    localStorage.setItem('carritoTech', JSON.stringify(carrito));
-    actualizarInterfazCarrito();
-    document.getElementById('cartOverlay').classList.add('open');
-}
+        function actualizarInterfazCarrito() {
+            let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
+            const contenedorItems = document.getElementById('cartDrawerItems');
+            const contadorHeader = document.getElementById('cartCount');
+            const contadorDrawer = document.getElementById('cartDrawerCount');
+            const totalPrecioElemento = document.querySelector('.cart-total-price');
 
-function eliminarDelCarrito(index) {
-    let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-    carrito.splice(index, 1);
-    localStorage.setItem('carritoTech', JSON.stringify(carrito));
-    actualizarInterfazCarrito();
-}
+            if (!contenedorItems) return;
+            contenedorItems.innerHTML = '';
 
-function actualizarInterfazCarrito() {
-    let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-    const contenedorItems = document.getElementById('cartDrawerItems');
-    const contadorHeader = document.getElementById('cartCount');
-    const contadorDrawer = document.getElementById('cartDrawerCount');
-    const totalPrecioElemento = document.querySelector('.cart-total-price');
+            let totalArticulos = 0;
+            let costeTotal = 0;
 
-    if (!contenedorItems) return;
-    contenedorItems.innerHTML = '';
+            if (carrito.length === 0) {
+                contenedorItems.innerHTML = `<p style="text-align:center; color:var(--muted); margin-top:30px;">Tu carrito está vacío.</p>`;
+            } else {
+                carrito.forEach((item, index) => {
+                    totalArticulos += item.cantidad;
+                    costeTotal += (item.precio * item.cantidad);
+                    const precioFormateado = item.precio.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
 
-    let totalArticulos = 0;
-    let costeTotal = 0;
-
-    if (carrito.length === 0) {
-        contenedorItems.innerHTML = `<p style="text-align:center; color:var(--muted); margin-top:30px;">Tu carrito está vacío.</p>`;
-    } else {
-        carrito.forEach((item, index) => {
-            totalArticulos += item.cantidad;
-            costeTotal += (item.precio * item.cantidad);
-            const precioFormateado = item.precio.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
-
-            contenedorItems.innerHTML += `
+                    contenedorItems.innerHTML += `
                 <div class="cart-item-row">
                     <div class="cart-item-img">
                         <img src="${item.imagen}" alt="${item.titulo}">
@@ -1709,21 +1709,21 @@ function actualizarInterfazCarrito() {
                     </div>
                 </div>
             `;
+                });
+            }
+
+            if (contadorHeader) contadorHeader.innerText = totalArticulos;
+            if (contadorDrawer) contadorDrawer.innerText = totalArticulos;
+            if (totalPrecioElemento) totalPrecioElemento.innerText = costeTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
+        }
+
+        const tarjetasGrado = document.querySelectorAll('.grade-option-card');
+        tarjetasGrado.forEach(tarjeta => {
+            tarjeta.addEventListener('click', () => {
+                tarjetasGrado.forEach(t => t.classList.remove('active'));
+                tarjeta.classList.add('active');
+            });
         });
-    }
-
-    if(contadorHeader) contadorHeader.innerText = totalArticulos;
-    if(contadorDrawer) contadorDrawer.innerText = totalArticulos;
-    if(totalPrecioElemento) totalPrecioElemento.innerText = costeTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
-}
-
-const tarjetasGrado = document.querySelectorAll('.grade-option-card');
-tarjetasGrado.forEach(tarjeta => {
-    tarjeta.addEventListener('click', () => {
-        tarjetasGrado.forEach(t => t.classList.remove('active'));
-        tarjeta.classList.add('active');
-    });
-});
 
     </script>
     <script src="BarraBusqueda.js"></script>

@@ -91,32 +91,30 @@ function renderizarTarjetas(listaProductos) {
         // Normalizamos el grado estético para que encaje con tus estilos CSS (ej: "Grado Excelente" -> "grado-excelente")
         const claseGrado = producto.estado_grade.toLowerCase().replace(' ', '-');
 
-        // Construcción limpia de la tarjeta con evento de clic directo
-        // Construcción limpia de la tarjeta con rutas relativas corregidas
+        // 🌟 CORREGIDO: Eliminamos el enlace <a> exterior para mantener intacto el Grid de CSS.
+        // Toda la tarjeta se vuelve clicable a través del atributo onclick de forma nativa.
         const tarjetaHTML = `
-            <a href="productos.html?id=${idReal}" class="tarjeta-link" style="text-decoration: none; color: inherit; display: block;">
-                <article class="product-card" 
-                         data-precio="${producto.precio_euro}" 
-                         data-grado="${producto.estado_grade}" 
-                         data-marca="${producto.marca}"
-                         onclick="window.location.href='productos.html?id=${idReal}'"
-                         style="cursor: pointer;">
-                    <div class="product-image-container">
-                        <span style="font-size: 40px; display: block; text-align: center; line-height: 150px;">📦</span>
+            <article class="product-card" 
+                     data-precio="${producto.precio_euro}" 
+                     data-grado="${producto.estado_grade}" 
+                     data-marca="${producto.marca}"
+                     onclick="window.location.href='productos.html?id=${idReal}'"
+                     style="cursor: pointer;">
+                <div class="product-image-container">
+                    <span style="font-size: 40px; display: block; text-align: center; line-height: 150px;">📦</span>
+                </div>
+                <div class="product-info">
+                    <span class="product-brand">${producto.marca}</span>
+                    <h3 class="product-name">${tituloCompleto}</h3>
+                    <div class="product-details">
+                        <span class="product-grade ${claseGrado}">${producto.estado_grade}</span>
                     </div>
-                    <div class="product-info">
-                        <span class="product-brand">${producto.marca}</span>
-                        <h3 class="product-name">${tituloCompleto}</h3>
-                        <div class="product-details">
-                            <span class="product-grade ${claseGrado}">${producto.estado_grade}</span>
-                        </div>
-                    </div>
-                    <div class="product-price-section">
-                        <span class="price-label">Desde</span>
-                        <span class="price-value">${Number(producto.precio_euro).toFixed(2).replace('.', ',')} <span>€</span></span>
-                    </div>
-                </article>
-            </a>
+                </div>
+                <div class="product-price-section">
+                    <span class="price-label">Desde</span>
+                    <span class="price-value">${Number(producto.precio_euro).toFixed(2).replace('.', ',')} <span>€</span></span>
+                </div>
+            </article>
         `;
         
         // Las inyectamos limpiamente una detrás de otra para que no se pisen

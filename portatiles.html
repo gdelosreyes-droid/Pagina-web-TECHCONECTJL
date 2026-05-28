@@ -1295,10 +1295,12 @@
             <div class="filter-item grado-item">
                 <button class="filter-btn">Grado estético ▾</button>
                 <div class="filter-dropdown">
-                    <a href="#">Grado Excelente</a>
-                    <a href="#">Grado Muy Bueno</a>
-                    <a href="#">Grado Bueno</a>
-                    <a href="#">Grado Correcto</a>
+                    <a href="#">Grade NUEVO</a>
+                    <a href="#">Grade NUEVO ABIERTO</a>
+                    <a href="#">Grade A</a>
+                    <a href="#">Grade B</a>
+                    <a href="#">Grade B+</a>
+                    <a href="#">Grade B/C</a>
                 </div>
             </div>
 
@@ -1385,50 +1387,55 @@
 
         </div>
     </div>
-    <script>
+     <script>
 
-        
-        // 1. ESTADO DE FILTROS ACTIVOS
+        // ── ESTADO DE FILTROS ACTIVOS ──
+        // ── ESTADO DE FILTROS ACTIVOS ──
         const filtros = {
             precioMin: 0,
             precioMax: 9999,
             grado: null,
-            marca: null, 
+            marca: null,
             almacenamiento: null
         };
 
-        // 2. FUNCIÓN PRINCIPAL DE FILTRADO (SABER QUÉ MOSTRAR U OCULTAR)
+        // ── LEER DATOS DE CADA TARJETA Y FILTRAR ──
         function aplicarFiltros() {
             const cards = document.querySelectorAll('.product-card');
             let visibles = 0;
 
             cards.forEach(card => {
-                const precio = parseFloat(card.dataset.precio) || 0;
-                const grado = card.dataset.grado;
-                const marca = card.dataset.marca; // Captura la marca real del portátil
+                const precio = parseFloat(card.dataset.precio);
+                const marca = card.dataset.marca;
                 const almacenamiento = card.dataset.almacenamiento;
 
+                // --- LOGICA DE GRADO CORREGIDA Y FLEXIBLE ---
+                const gradoTarjeta = card.dataset.grado ? card.dataset.grado.toLowerCase().replace(/grade\s+|grado\s+/g, '').trim() : '';
+                const gradoFiltro = filtros.grado ? filtros.grado.toLowerCase().replace(/grade\s+|grado\s+/g, '').trim() : '';
+
                 const pasaPrecio = precio >= filtros.precioMin && precio <= filtros.precioMax;
-                const pasaGrado = !filtros.grado || grado === filtros.grado;
-                const pasaMarca = !filtros.marca || marca === filtros.marca; 
+                const pasaMarca = !filtros.marca || marca === filtros.marca;
                 const pasaAlmacenamiento = !filtros.almacenamiento || almacenamiento === filtros.almacenamiento;
 
+                // Comparamos los grados normalizados (ej: "a" === "a")
+                const pasaGrado = !filtros.grado || gradoTarjeta === gradoFiltro;
+
                 if (pasaPrecio && pasaGrado && pasaMarca && pasaAlmacenamiento) {
-                    card.style.display = 'flex';
+                    card.style.display = ''; // 🌟 Deja que el CSS original controle la posición
                     visibles++;
                 } else {
                     card.style.display = 'none';
                 }
             });
 
-            // Mensaje si no hay resultados
+            // 🌟 CORRECCIÓN: El control de 'no-results' DEBE estar dentro de la función para conocer el valor de 'visibles'
             let noResults = document.getElementById('no-results');
             if (visibles === 0) {
                 if (!noResults) {
                     noResults = document.createElement('p');
                     noResults.id = 'no-results';
                     noResults.style.cssText = 'text-align:center; color:var(--muted); padding:40px; width:100%; grid-column:1/-1;';
-                    noResults.textContent = 'No hay portátiles que coincidan con los filtros seleccionados.';
+                    noResults.textContent = 'No hay productos que coincidan con los filtros seleccionados.';
                     document.querySelector('.products-grid').appendChild(noResults);
                 }
             } else {
@@ -1442,43 +1449,41 @@
         const inputMin = document.querySelector('.input-min');
         const inputMax = document.querySelector('.input-max');
 
-        rangeMin.addEventListener('input', () => {
-            let val = parseInt(rangeMin.value);
-            if (val >= parseInt(rangeMax.value)) val = parseInt(rangeMax.value) - 10;
-            rangeMin.value = val;
-            inputMin.value = val;
-            filtros.precioMin = val;
-        });
+        if (rangeMin && rangeMax && inputMin && inputMax) {
+            rangeMin.addEventListener('input', () => {
+                let val = parseInt(rangeMin.value);
+                if (val >= parseInt(rangeMax.value)) val = parseInt(rangeMax.value) - 10;
+                rangeMin.value = val;
+                inputMin.value = val;
+                filtros.precioMin = val;
+            });
 
-        rangeMax.addEventListener('input', () => {
-            let val = parseInt(rangeMax.value);
-            if (val <= parseInt(rangeMin.value)) val = parseInt(rangeMin.value) + 10;
-            rangeMax.value = val;
-            inputMax.value = val;
-            filtros.precioMax = val;
-        });
+            rangeMax.addEventListener('input', () => {
+                let val = parseInt(rangeMax.value);
+                if (val <= parseInt(rangeMin.value)) val = parseInt(rangeMin.value) + 10;
+                rangeMax.value = val;
+                inputMax.value = val;
+                filtros.precioMax = val;
+            });
 
-        // Control directo sobre la caja de entrada mínima
-        inputMin.addEventListener('input', () => {
-            // Si el valor baja de cero o está vacío, se fuerza a 0 inmediatamente
-            if (parseInt(inputMin.value) < 0 || inputMin.value === "") {
-                inputMin.value = 0;
-            }
-            rangeMin.value = inputMin.value;
-            filtros.precioMin = parseInt(inputMin.value);
-        });
+            inputMin.addEventListener('input', () => {
+                if (parseInt(inputMin.value) < 0 || inputMin.value === "") {
+                    inputMin.value = 0;
+                }
+                rangeMin.value = inputMin.value;
+                filtros.precioMin = parseInt(inputMin.value);
+            });
 
-        // Control directo sobre la caja de entrada máxima
-        inputMax.addEventListener('input', () => {
-            // Evita también que el precio máximo sea negativo
-            if (parseInt(inputMax.value) < 0 || inputMax.value === "") {
-                inputMax.value = 0;
-            }
-            rangeMax.value = inputMax.value;
-            filtros.precioMax = parseInt(inputMax.value);
-        });
+            inputMax.addEventListener('input', () => {
+                if (parseInt(inputMax.value) < 0 || inputMax.value === "") {
+                    inputMax.value = 0;
+                }
+                rangeMax.value = inputMax.value;
+                filtros.precioMax = parseInt(inputMax.value);
+            });
+        }
 
-        // CONTROL DE CIERRE AUTOMÁTICO EN EL BOTÓN "VER PRODUCTOS"
+        // ── CONTROL DE CIERRE AUTOMÁTICO EN EL BOTÓN "VER PRODUCTOS" ──
         const applyBtn = document.querySelector('.btn-apply-filter');
         if (applyBtn) {
             applyBtn.addEventListener('click', () => {
@@ -1490,54 +1495,34 @@
             });
         }
 
-        // REINICIAR CUANDO SE VUELVE A PASAR EL RATÓN (ESCRITORIO)
-        const pricePopupElement = document.querySelector('.price-popup');
-        if (pricePopupElement) {
-            const priceFilterItem = pricePopupElement.closest('.filter-item');
+        // ── REINICIAR CUANDO SE VUELVE A PASAR EL RATÓN ──
+        const pricePopupEl = document.querySelector('.price-popup');
+        if (pricePopupEl) {
+            const priceFilterItem = pricePopupEl.closest('.filter-item');
             if (priceFilterItem) {
                 priceFilterItem.addEventListener('mouseleave', () => {
-                    pricePopupElement.classList.remove('popup-closed');
+                    if (pricePopupEl) {
+                        pricePopupEl.classList.remove('popup-closed');
+                    }
                 });
             }
         }
 
-        // 4. DETECTORES DE CLICS CORREGIDOS Y INDEPENDIENTES
-        
-        // Filtro de Grado
+        // ── FILTRO DE GRADO OMNIPRESENTE ──
         document.querySelectorAll('.grado-item .filter-dropdown a').forEach(a => {
             a.addEventListener('click', e => {
                 e.preventDefault();
+
                 const deseleccionado = marcarActivo(a, 'grado');
-                filtros.grado = deseleccionado ? null : a.textContent.trim();
-                aplicarFiltros();
-            });
-        });
 
-        // Filtro de Almacenamiento
-        document.querySelectorAll('.almacen-item .filter-dropdown a').forEach(a => {
-            a.addEventListener('click', e => {
-                e.preventDefault();
-                const deseleccionado = marcarActivo(a, 'almacenamiento');
-                filtros.almacenamiento = deseleccionado ? null : a.textContent.trim();
-                aplicarFiltros();
-            });
-        });
+                if (!deseleccionado) {
+                    filtros.grado = a.textContent.trim();
+                } else {
+                    filtros.grado = null;
+                }
 
-        // FILTRO DE MARCAS REFACTORIZADO Y CORREGIDO PARA PORTÁTILES (HP, LENOVO, ETC.)
-        document.querySelectorAll('.brand-mega-dropdown a').forEach(a => {
-            a.addEventListener('click', e => {
-                e.preventDefault();
-                
-                // Hace la selección o deselección visual
-                const deseleccionado = marcarActivo(a, 'marca');
-                
-                // Almacena el texto limpio de la marca (ej: "HP", "Lenovo")
-                filtros.marca = deseleccionado ? null : a.textContent.trim();
-                
-                // Ejecuta la renderización en tiempo real
                 aplicarFiltros();
 
-                // Limpieza de focos para evitar bloqueos en pantallas táctiles
                 a.blur();
                 if (document.activeElement) {
                     document.activeElement.blur();
@@ -1545,17 +1530,42 @@
             });
         });
 
-        // FUNCIÓN AUXILIAR PARA RESALTAR U OCULTAR LA SELECCIÓN VISUAL
+        // ── FILTRO DE ALMACENAMIENTO ──
+        document.querySelectorAll('.filter-dropdown a').forEach(a => {
+            if (a.textContent.trim().includes('GB') || a.textContent.trim().includes('TB')) {
+                a.addEventListener('click', e => {
+                    e.preventDefault();
+                    const deseleccionado = marcarActivo(a, 'almacenamiento');
+                    if (!deseleccionado) filtros.almacenamiento = a.textContent.trim();
+                    aplicarFiltros();
+                });
+            }
+        });
+
+        // ── FILTRO DE MARCA (LIMPIEZA RADICAL DE FOCO) ──
+        document.querySelectorAll('.brand-mega-dropdown a').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+                const deseleccionado = marcarActivo(a, 'marca');
+                if (!deseleccionado) filtros.marca = a.textContent.trim();
+                aplicarFiltros();
+                a.blur();
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+            });
+        });
+
+        // ── MARCAR ACTIVO O DESACTIVAR SI YA ESTABA SELECCIONADO ──
         function marcarActivo(el, tipo) {
             const padre = el.closest('.filter-dropdown, .brand-mega-dropdown');
-
             if (filtros[tipo] === el.textContent.trim()) {
                 filtros[tipo] = null;
                 padre.querySelectorAll('a').forEach(a => {
                     a.style.fontWeight = '';
                     a.style.color = '';
                 });
-                return true; // Se deseleccionó
+                return true;
             }
 
             padre.querySelectorAll('a').forEach(a => {
@@ -1564,138 +1574,27 @@
             });
             el.style.fontWeight = '800';
             el.style.color = 'var(--p)';
-            return false; // Se seleccionó uno nuevo
+            return false;
         }
 
-        // 5. CONTROL DE AUTO-CIERRE REPETIBLE EN MÓVIL AL HACER SCROLL
-        let scrollTimeout;
-        function activarOcultacionPorMovimiento() {
-            if (window.innerWidth <= 850) {
-                const container = document.querySelector('.filters-container');
-                if (!container) return;
-
-                container.classList.add('oculto-por-scroll');
-                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
-                    container.classList.remove('oculto-por-scroll');
-                }, 200);
-            }
-        }
-
-        window.addEventListener('scroll', activarOcultacionPorMovimiento);
-        document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
-            dropdown.addEventListener('touchmove', activarOcultacionPorMovimiento);
-        });
-
-        if (pricePopupElement) {
-            pricePopupElement.addEventListener('touchmove', (e) => {
-                e.stopPropagation();
-            }, { passive: true });
-        }
-
-        // 6. DETECTOR DE APERTURA Y CIERRE DE MENÚS EN MÓVILES (ESTRUCTURA DE PORTÁTILES)
-        document.addEventListener("DOMContentLoaded", () => {
-            const esMovil = () => window.innerWidth <= 850;
-
-            // ORDEN CORREGIDO SEGÚN LA BARRA DE PORTÁTILES: 
-            // 1. Precio | 2. Marcas (.full-width) | 3. Grados | 4. Almacenamiento
-            const mapeoFiltros = [
-                { item: '.filter-item:has(.price-popup)', pop: '.price-popup' },
-                { item: '.full-width', pop: '.brand-mega-dropdown' },
-                { item: '.grado-item', pop: '.grado-item .filter-dropdown' },
-                { item: '.almacen-item', pop: '.almacen-item .filter-dropdown' }
-            ];
-
-            mapeoFiltros.forEach(filtro => {
-                const contenedor = document.querySelector(filtro.item);
-                if (!contenedor) return;
-
-                const boton = contenedor.querySelector('.filter-btn');
-                const desplegable = contenedor.querySelector(filtro.pop);
-
-                if (boton && desplegable) {
-                    // Abrir / Cerrar de manera independiente
-                    boton.addEventListener('click', (e) => {
-                        if (esMovil()) {
-                            e.stopPropagation();
-
-                            const estabaAbierto = desplegable.classList.contains('movil-abierto');
-
-                            // Cierra todos los demás desplegables primero para evitar solapamiento
-                            mapeoFiltros.forEach(f => {
-                                const d = document.querySelector(f.item)?.querySelector(f.pop);
-                                if (d) d.classList.remove('movil-abierto');
-                            });
-
-                            // Abre el desplegable actual
-                            if (!estabaAbierto) {
-                                desplegable.classList.add('movil-abierto');
-                            }
-                        }
-                    });
-
-                    // Cierre automático al seleccionar una opción de adentro
-                    const opciones = desplegable.querySelectorAll('a');
-                    opciones.forEach(opcion => {
-                        opcion.addEventListener('click', () => {
-                            if (esMovil()) {
-                                desplegable.classList.remove('movil-abierto');
-                            }
-                        });
-                    });
-
-                    // Cierre al pulsar "Ver productos" en precio
-                    const btnAplicarPrecio = desplegable.querySelector('.btn-apply-filter');
-                    if (btnAplicarPrecio) {
-                        btnAplicarPrecio.addEventListener('click', () => {
-                            if (esMovil()) {
-                                desplegable.classList.remove('movil-abierto');
-                            }
-                        });
-                    }
-                }
-            });
-
-            // Cerrar menús si el usuario pulsa en cualquier espacio vacío de la página
-            document.addEventListener('click', (e) => {
-                if (!e.target.closest('.filter-item, .full-width')) {
-                    document.querySelectorAll('.filter-dropdown, .brand-mega-dropdown, .price-popup').forEach(d => {
-                        d.classList.remove('movil-abierto');
-                    });
-                }
-            });
-
-            // Limpieza de clases responsive al ensanchar la pantalla
-            window.addEventListener('resize', () => {
-                if (!esMovil()) {
-                    document.querySelectorAll('.movil-abierto').forEach(el => {
-                        el.classList.remove('movil-abierto');
-                    });
-                }
-            });
-        });
+        /* QUE SE VEA LA SESION INICIADA */
         document.addEventListener("DOMContentLoaded", function () {
-            // Leemos el nombre que esté guardado actualmente
             const nombreGuardado = localStorage.getItem('usuarioNombre');
-
             if (nombreGuardado) {
-                // Muestra el bloque del usuario
                 document.getElementById('userProfileBlock').style.display = 'flex';
                 document.getElementById('nombreUsuarioTexto').textContent = nombreGuardado;
                 document.getElementById('avatarLetra').textContent = nombreGuardado.trim().charAt(0);
             }
         });
-        /*CARRITO*/
 
+        /* CARRITO */
         document.addEventListener("DOMContentLoaded", () => {
             actualizarInterfazCarrito();
         });
 
         function toggleCart() {
             const overlay = document.getElementById('cartOverlay');
-            overlay.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
         }
 
         function closeCartFromOverlay(event) {
@@ -1705,15 +1604,12 @@
         function agregarAlCarritoActual() {
             const titulo = document.querySelector('.product-title').innerText;
             const imagen = document.querySelector('.main-image-box img').src;
-
             const tarjetaActiva = document.querySelector('.grade-option-card.active');
             const grado = tarjetaActiva.querySelector('.grade-name-text').innerText;
             const precioTexto = tarjetaActiva.querySelector('.grade-price-indicator').innerText;
-
             const precioNumero = parseFloat(precioTexto.replace('.', '').replace(',', '.').replace(' €', ''));
 
             let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-
             const productoExistente = carrito.find(item => item.titulo === titulo && item.grado === grado);
 
             if (productoExistente) {
@@ -1731,27 +1627,24 @@
 
             localStorage.setItem('carritoTech', JSON.stringify(carrito));
             actualizarInterfazCarrito();
-
             document.getElementById('cartOverlay').classList.add('open');
         }
 
         function eliminarDelCarrito(index) {
             let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-
             carrito.splice(index, 1);
-
             localStorage.setItem('carritoTech', JSON.stringify(carrito));
             actualizarInterfazCarrito();
         }
 
         function actualizarInterfazCarrito() {
             let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-
             const contenedorItems = document.getElementById('cartDrawerItems');
             const contadorHeader = document.getElementById('cartCount');
             const contadorDrawer = document.getElementById('cartDrawerCount');
             const totalPrecioElemento = document.querySelector('.cart-total-price');
 
+            if (!contenedorItems) return;
             contenedorItems.innerHTML = '';
 
             let totalArticulos = 0;
@@ -1763,32 +1656,30 @@
                 carrito.forEach((item, index) => {
                     totalArticulos += item.cantidad;
                     costeTotal += (item.precio * item.cantidad);
-
                     const precioFormateado = item.precio.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
 
                     contenedorItems.innerHTML += `
-                    <div class="cart-item-row">
-                        <div class="cart-item-img">
-                            <img src="${item.imagen}" alt="${item.titulo}">
-                        </div>
-                        <div class="cart-item-info">
-                            <h4 class="cart-item-name">${item.titulo}</h4>
-                            <p class="cart-item-meta">Estado: <strong style="color: var(--p);">${item.grado}</strong></p>
-                            <p class="cart-item-meta">Cant: ${item.cantidad}</p>
-                        </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
-                            <div class="cart-item-price">${precioFormateado}</div>
-                            <button class="btn-remove-item" onclick="eliminarDelCarrito(${index})">🗑️</button>
-                        </div>
+                <div class="cart-item-row">
+                    <div class="cart-item-img">
+                        <img src="${item.imagen}" alt="${item.titulo}">
                     </div>
-                `;
+                    <div class="cart-item-info">
+                        <h4 class="cart-item-name">${item.titulo}</h4>
+                        <p class="cart-item-meta">Estado: <strong style="color: var(--p);">${item.grado}</strong></p>
+                        <p class="cart-item-meta">Cant: ${item.cantidad}</p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+                        <div class="cart-item-price">${precioFormateado}</div>
+                        <button class="btn-remove-item" onclick="eliminarDelCarrito(${index})">🗑️</button>
+                    </div>
+                </div>
+            `;
                 });
             }
 
-            contadorHeader.innerText = totalArticulos;
-            contadorDrawer.innerText = totalArticulos;
-
-            totalPrecioElemento.innerText = costeTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
+            if (contadorHeader) contadorHeader.innerText = totalArticulos;
+            if (contadorDrawer) contadorDrawer.innerText = totalArticulos;
+            if (totalPrecioElemento) totalPrecioElemento.innerText = costeTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
         }
 
         const tarjetasGrado = document.querySelectorAll('.grade-option-card');
@@ -1798,6 +1689,7 @@
                 tarjeta.classList.add('active');
             });
         });
+
     </script>
     <script src="BarraBusqueda.js"></script>
 <script src="filtros.js"></script>

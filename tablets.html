@@ -1301,10 +1301,12 @@
             <div class="filter-item grado-item">
                 <button class="filter-btn">Grado estético ▾</button>
                 <div class="filter-dropdown">
-                    <a href="#">Grado Excelente</a>
-                    <a href="#">Grado Muy Bueno</a>
-                    <a href="#">Grado Bueno</a>
-                    <a href="#">Grado Correcto</a>
+                    <a href="#">Grade NUEVO</a>
+                    <a href="#">Grade NUEVO ABIERTO</a>
+                    <a href="#">Grade A</a>
+                    <a href="#">Grade B</a>
+                    <a href="#">Grade B+</a>
+                    <a href="#">Grade B/C</a>
                 </div>
             </div>
 
@@ -1391,8 +1393,9 @@
 
         </div>
     </div>
-    <script>
+     <script>
 
+        // ── ESTADO DE FILTROS ACTIVOS ──
         // ── ESTADO DE FILTROS ACTIVOS ──
         const filtros = {
             precioMin: 0,
@@ -1402,32 +1405,36 @@
             almacenamiento: null
         };
 
-        // ── LEER DATOS DE CADA TARJETA ──
-        // Para que funcione, cada product-card necesita data-attributes (los añadimos abajo)
+        // ── LEER DATOS DE CADA TARJETA Y FILTRAR ──
         function aplicarFiltros() {
             const cards = document.querySelectorAll('.product-card');
             let visibles = 0;
 
             cards.forEach(card => {
                 const precio = parseFloat(card.dataset.precio);
-                const grado = card.dataset.grado;
                 const marca = card.dataset.marca;
                 const almacenamiento = card.dataset.almacenamiento;
 
+                // --- LOGICA DE GRADO CORREGIDA Y FLEXIBLE ---
+                const gradoTarjeta = card.dataset.grado ? card.dataset.grado.toLowerCase().replace(/grade\s+|grado\s+/g, '').trim() : '';
+                const gradoFiltro = filtros.grado ? filtros.grado.toLowerCase().replace(/grade\s+|grado\s+/g, '').trim() : '';
+
                 const pasaPrecio = precio >= filtros.precioMin && precio <= filtros.precioMax;
-                const pasaGrado = !filtros.grado || grado === filtros.grado;
                 const pasaMarca = !filtros.marca || marca === filtros.marca;
                 const pasaAlmacenamiento = !filtros.almacenamiento || almacenamiento === filtros.almacenamiento;
 
+                // Comparamos los grados normalizados (ej: "a" === "a")
+                const pasaGrado = !filtros.grado || gradoTarjeta === gradoFiltro;
+
                 if (pasaPrecio && pasaGrado && pasaMarca && pasaAlmacenamiento) {
-                    card.style.display = 'flex';
+                    card.style.display = ''; // 🌟 Deja que el CSS original controle la posición
                     visibles++;
                 } else {
                     card.style.display = 'none';
                 }
             });
 
-            // Mensaje si no hay resultados
+            // 🌟 CORRECCIÓN: El control de 'no-results' DEBE estar dentro de la función para conocer el valor de 'visibles'
             let noResults = document.getElementById('no-results');
             if (visibles === 0) {
                 if (!noResults) {
@@ -1448,81 +1455,85 @@
         const inputMin = document.querySelector('.input-min');
         const inputMax = document.querySelector('.input-max');
 
-        rangeMin.addEventListener('input', () => {
-            let val = parseInt(rangeMin.value);
-            if (val >= parseInt(rangeMax.value)) val = parseInt(rangeMax.value) - 10;
-            rangeMin.value = val;
-            inputMin.value = val;
-            filtros.precioMin = val;
-        });
+        if (rangeMin && rangeMax && inputMin && inputMax) {
+            rangeMin.addEventListener('input', () => {
+                let val = parseInt(rangeMin.value);
+                if (val >= parseInt(rangeMax.value)) val = parseInt(rangeMax.value) - 10;
+                rangeMin.value = val;
+                inputMin.value = val;
+                filtros.precioMin = val;
+            });
 
-        rangeMax.addEventListener('input', () => {
-            let val = parseInt(rangeMax.value);
-            if (val <= parseInt(rangeMin.value)) val = parseInt(rangeMin.value) + 10;
-            rangeMax.value = val;
-            inputMax.value = val;
-            filtros.precioMax = val;
-        });
+            rangeMax.addEventListener('input', () => {
+                let val = parseInt(rangeMax.value);
+                if (val <= parseInt(rangeMin.value)) val = parseInt(rangeMin.value) + 10;
+                rangeMax.value = val;
+                inputMax.value = val;
+                filtros.precioMax = val;
+            });
 
-        // Control directo sobre la caja de entrada mínima
-        inputMin.addEventListener('input', () => {
-            // Si el valor baja de cero o está vacío, se fuerza a 0 inmediatamente
-            if (parseInt(inputMin.value) < 0 || inputMin.value === "") {
-                inputMin.value = 0;
-            }
-            rangeMin.value = inputMin.value;
-            filtros.precioMin = parseInt(inputMin.value);
-        });
+            inputMin.addEventListener('input', () => {
+                if (parseInt(inputMin.value) < 0 || inputMin.value === "") {
+                    inputMin.value = 0;
+                }
+                rangeMin.value = inputMin.value;
+                filtros.precioMin = parseInt(inputMin.value);
+            });
 
-        // Control directo sobre la caja de entrada máxima
-        inputMax.addEventListener('input', () => {
-            // Evita también que el precio máximo sea negativo
-            if (parseInt(inputMax.value) < 0 || inputMax.value === "") {
-                inputMax.value = 0;
-            }
-            rangeMax.value = inputMax.value;
-            filtros.precioMax = parseInt(inputMax.value);
-        });
+            inputMax.addEventListener('input', () => {
+                if (parseInt(inputMax.value) < 0 || inputMax.value === "") {
+                    inputMax.value = 0;
+                }
+                rangeMax.value = inputMax.value;
+                filtros.precioMax = parseInt(inputMax.value);
+            });
+        }
 
         // ── CONTROL DE CIERRE AUTOMÁTICO EN EL BOTÓN "VER PRODUCTOS" ──
         const applyBtn = document.querySelector('.btn-apply-filter');
-
-        applyBtn.addEventListener('click', () => {
-            // 1. Aplica tus filtros originales
-            aplicarFiltros();
-
-            // 2. Le metemos la clase para ocultarlo inmediatamente
-            const pricePopup = document.querySelector('.price-popup');
-            if (pricePopup) {
-                pricePopup.classList.add('popup-closed');
-            }
-        });
-
-        // ── REINICIAR CUANDO SE VUELVE A PASAR EL RATÓN (ESCRITORIO) ──
-        // Buscamos el contenedor del elemento filtro que rodea al botón "Precio"
-        const priceFilterItem = document.querySelector('.price-popup').closest('.filter-item');
-
-        if (priceFilterItem) {
-            priceFilterItem.addEventListener('mouseleave', () => {
-                // Cuando el ratón se va del filtro, le quitamos el bloqueo invisible
+        if (applyBtn) {
+            applyBtn.addEventListener('click', () => {
+                aplicarFiltros();
                 const pricePopup = document.querySelector('.price-popup');
                 if (pricePopup) {
-                    pricePopup.classList.remove('popup-closed');
+                    pricePopup.classList.add('popup-closed');
                 }
             });
         }
 
-        // ── FILTRO DE GRADO ──
-        document.querySelectorAll('.filter-dropdown a').forEach(a => {
-            const texto = a.textContent.trim().toLowerCase();
-            if (texto.includes('excelente') || texto.includes('muy bueno') || texto.includes('bueno') || texto.includes('correcto')) {
-                a.addEventListener('click', e => {
-                    e.preventDefault();
-                    const deseleccionado = marcarActivo(a, 'grado');
-                    if (!deseleccionado) filtros.grado = a.textContent.trim();
-                    aplicarFiltros();
+        // ── REINICIAR CUANDO SE VUELVE A PASAR EL RATÓN ──
+        const pricePopupEl = document.querySelector('.price-popup');
+        if (pricePopupEl) {
+            const priceFilterItem = pricePopupEl.closest('.filter-item');
+            if (priceFilterItem) {
+                priceFilterItem.addEventListener('mouseleave', () => {
+                    if (pricePopupEl) {
+                        pricePopupEl.classList.remove('popup-closed');
+                    }
                 });
             }
+        }
+
+        // ── FILTRO DE GRADO OMNIPRESENTE ──
+        document.querySelectorAll('.grado-item .filter-dropdown a').forEach(a => {
+            a.addEventListener('click', e => {
+                e.preventDefault();
+
+                const deseleccionado = marcarActivo(a, 'grado');
+
+                if (!deseleccionado) {
+                    filtros.grado = a.textContent.trim();
+                } else {
+                    filtros.grado = null;
+                }
+
+                aplicarFiltros();
+
+                a.blur();
+                if (document.activeElement) {
+                    document.activeElement.blur();
+                }
+            });
         });
 
         // ── FILTRO DE ALMACENAMIENTO ──
@@ -1541,17 +1552,10 @@
         document.querySelectorAll('.brand-mega-dropdown a').forEach(a => {
             a.addEventListener('click', e => {
                 e.preventDefault();
-
-                // 1. Ejecuta tu lógica original de filtros
                 const deseleccionado = marcarActivo(a, 'marca');
                 if (!deseleccionado) filtros.marca = a.textContent.trim();
                 aplicarFiltros();
-
-                // 2. LA CLAVE: Forzamos al elemento activo (el enlace) a perder el foco
                 a.blur();
-
-                // 3. Por si acaso el foco se ha quedado atrapado en el botón o contenedor principal,
-                // obligamos a la página entera a limpiar el foco activo del documento.
                 if (document.activeElement) {
                     document.activeElement.blur();
                 }
@@ -1561,18 +1565,15 @@
         // ── MARCAR ACTIVO O DESACTIVAR SI YA ESTABA SELECCIONADO ──
         function marcarActivo(el, tipo) {
             const padre = el.closest('.filter-dropdown, .brand-mega-dropdown');
-
-            // Si ya estaba seleccionado, deseleccionar
             if (filtros[tipo] === el.textContent.trim()) {
                 filtros[tipo] = null;
                 padre.querySelectorAll('a').forEach(a => {
                     a.style.fontWeight = '';
                     a.style.color = '';
                 });
-                return true; // indica que se deseleccionó
+                return true;
             }
 
-            // Si es nuevo, marcar
             padre.querySelectorAll('a').forEach(a => {
                 a.style.fontWeight = '';
                 a.style.color = '';
@@ -1582,134 +1583,24 @@
             return false;
         }
 
-        // CONTROL DE AUTO-CIERRE REPETIBLE EN MÓVIL
-        let scrollTimeout;
-        function activarOcultacionPorMovimiento() {
-            if (window.innerWidth <= 850) {
-                const container = document.querySelector('.filters-container');
-                if (!container) return;
-
-                container.classList.add('oculto-por-scroll');
-                document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
-
-                clearTimeout(scrollTimeout);
-                scrollTimeout = setTimeout(() => {
-                    container.classList.remove('oculto-por-scroll');
-                }, 200);
-            }
-        }
-
-        // ── DETECTOR 1: CONTROL DE SCROLL GENERAL ──
-        window.addEventListener('scroll', activarOcultacionPorMovimiento);
-
-        // Control estricto para los dropdowns normales
-        document.querySelectorAll('.filter-dropdown').forEach(dropdown => {
-            dropdown.addEventListener('touchmove', activarOcultacionPorMovimiento);
-        });
-
-        // 💡 LA SOLUCIÓN COMPLETA PARA MÓVIL REAL: 
-        // Buscamos el popup de precios y frenamos de raíz la propagación del dedo hacia la página principal
-        const pricePopupElement = document.querySelector('.price-popup');
-        if (pricePopupElement) {
-            pricePopupElement.addEventListener('touchmove', (e) => {
-                // Esto le dice al móvil: "El movimiento muere aquí, procesa solo mi scroll interno"
-                e.stopPropagation();
-            }, { passive: true });
-        }
-        document.addEventListener("DOMContentLoaded", () => {
-
-            // Función auxiliar para detectar resoluciones móviles
-            const esMovil = () => window.innerWidth <= 850;
-
-            // Configuración de los selectores de filtros y sus respectivos desplegables
-            const mapeoFiltros = [
-                { item: '.filter-item:has(.price-popup)', pop: '.price-popup' },
-                { item: '.grado-item', pop: '.filter-dropdown' },
-                { item: '.full-width', pop: '.brand-mega-dropdown' },
-                { item: '.almacen-item', pop: '.filter-dropdown' }
-            ];
-
-            mapeoFiltros.forEach(filtro => {
-                const contenedor = document.querySelector(filtro.item);
-                if (!contenedor) return;
-
-                const boton = contenedor.querySelector('.filter-btn');
-                const desplegable = contenedor.querySelector(filtro.pop);
-
-                if (boton && desplegable) {
-
-                    // ── 1. COMPORTAMIENTO DEL BOTÓN PRINCIPAL (CÍCLICO) ──
-                    boton.addEventListener('click', (e) => {
-                        if (esMovil()) {
-                            e.stopPropagation(); // Evita interferencias con otros clics
-
-                            // Guarda si este filtro ya estaba abierto antes del click
-                            const estabaAbierto = desplegable.classList.contains('movil-abierto');
-
-                            // 1. Cerramos todos los menús abiertos para no amontonar la pantalla
-                            mapeoFiltros.forEach(f => {
-                                const d = document.querySelector(f.item)?.querySelector(f.pop);
-                                if (d) d.classList.remove('movil-abierto');
-                            });
-
-                            // 2. Si NO estaba abierto, lo abrimos (Toggle alternativo limpio)
-                            if (!estabaAbierto) {
-                                desplegable.classList.add('movil-abierto');
-                            }
-                        }
-                    });
-
-                    // ── 2. CIERRE AL SELECCIONAR UNA CARACTERÍSTICA O ENLACE ──
-                    const opciones = desplegable.querySelectorAll('a');
-                    opciones.forEach(opcion => {
-                        opcion.addEventListener('click', () => {
-                            if (esMovil()) {
-                                desplegable.classList.remove('movil-abierto');
-                            }
-                        });
-                    });
-
-                    // ── 3. CASO ESPECIAL: CIERRE AL PULSAR "APLICAR FILTRO" EN EL POPUP DE PRECIO ──
-                    const btnAplicarPrecio = desplegable.querySelector('.btn-apply-filter');
-                    if (btnAplicarPrecio) {
-                        btnAplicarPrecio.addEventListener('click', () => {
-                            if (esMovil()) {
-                                desplegable.classList.remove('movil-abierto');
-                            }
-                        });
-                    }
-                }
-            });
-
-            // Resetear las clases si el usuario redimensiona o rota la pantalla a modo escritorio
-            window.addEventListener('resize', () => {
-                if (!esMovil()) {
-                    document.querySelectorAll('.movil-abierto').forEach(el => {
-                        el.classList.remove('movil-abierto');
-                    });
-                }
-            });
-        });
+        /* QUE SE VEA LA SESION INICIADA */
         document.addEventListener("DOMContentLoaded", function () {
-            // Leemos el nombre que esté guardado actualmente
             const nombreGuardado = localStorage.getItem('usuarioNombre');
-
             if (nombreGuardado) {
-                // Muestra el bloque del usuario
                 document.getElementById('userProfileBlock').style.display = 'flex';
                 document.getElementById('nombreUsuarioTexto').textContent = nombreGuardado;
                 document.getElementById('avatarLetra').textContent = nombreGuardado.trim().charAt(0);
             }
         });
-        /*CARRITO*/
 
+        /* CARRITO */
         document.addEventListener("DOMContentLoaded", () => {
             actualizarInterfazCarrito();
         });
 
         function toggleCart() {
             const overlay = document.getElementById('cartOverlay');
-            overlay.classList.toggle('open');
+            if (overlay) overlay.classList.toggle('open');
         }
 
         function closeCartFromOverlay(event) {
@@ -1719,15 +1610,12 @@
         function agregarAlCarritoActual() {
             const titulo = document.querySelector('.product-title').innerText;
             const imagen = document.querySelector('.main-image-box img').src;
-
             const tarjetaActiva = document.querySelector('.grade-option-card.active');
             const grado = tarjetaActiva.querySelector('.grade-name-text').innerText;
             const precioTexto = tarjetaActiva.querySelector('.grade-price-indicator').innerText;
-
             const precioNumero = parseFloat(precioTexto.replace('.', '').replace(',', '.').replace(' €', ''));
 
             let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-
             const productoExistente = carrito.find(item => item.titulo === titulo && item.grado === grado);
 
             if (productoExistente) {
@@ -1745,27 +1633,24 @@
 
             localStorage.setItem('carritoTech', JSON.stringify(carrito));
             actualizarInterfazCarrito();
-
             document.getElementById('cartOverlay').classList.add('open');
         }
 
         function eliminarDelCarrito(index) {
             let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-
             carrito.splice(index, 1);
-
             localStorage.setItem('carritoTech', JSON.stringify(carrito));
             actualizarInterfazCarrito();
         }
 
         function actualizarInterfazCarrito() {
             let carrito = JSON.parse(localStorage.getItem('carritoTech')) || [];
-
             const contenedorItems = document.getElementById('cartDrawerItems');
             const contadorHeader = document.getElementById('cartCount');
             const contadorDrawer = document.getElementById('cartDrawerCount');
             const totalPrecioElemento = document.querySelector('.cart-total-price');
 
+            if (!contenedorItems) return;
             contenedorItems.innerHTML = '';
 
             let totalArticulos = 0;
@@ -1777,32 +1662,30 @@
                 carrito.forEach((item, index) => {
                     totalArticulos += item.cantidad;
                     costeTotal += (item.precio * item.cantidad);
-
                     const precioFormateado = item.precio.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
 
                     contenedorItems.innerHTML += `
-                    <div class="cart-item-row">
-                        <div class="cart-item-img">
-                            <img src="${item.imagen}" alt="${item.titulo}">
-                        </div>
-                        <div class="cart-item-info">
-                            <h4 class="cart-item-name">${item.titulo}</h4>
-                            <p class="cart-item-meta">Estado: <strong style="color: var(--p);">${item.grado}</strong></p>
-                            <p class="cart-item-meta">Cant: ${item.cantidad}</p>
-                        </div>
-                        <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
-                            <div class="cart-item-price">${precioFormateado}</div>
-                            <button class="btn-remove-item" onclick="eliminarDelCarrito(${index})">🗑️</button>
-                        </div>
+                <div class="cart-item-row">
+                    <div class="cart-item-img">
+                        <img src="${item.imagen}" alt="${item.titulo}">
                     </div>
-                `;
+                    <div class="cart-item-info">
+                        <h4 class="cart-item-name">${item.titulo}</h4>
+                        <p class="cart-item-meta">Estado: <strong style="color: var(--p);">${item.grado}</strong></p>
+                        <p class="cart-item-meta">Cant: ${item.cantidad}</p>
+                    </div>
+                    <div style="display:flex; flex-direction:column; align-items:flex-end; gap:10px;">
+                        <div class="cart-item-price">${precioFormateado}</div>
+                        <button class="btn-remove-item" onclick="eliminarDelCarrito(${index})">🗑️</button>
+                    </div>
+                </div>
+            `;
                 });
             }
 
-            contadorHeader.innerText = totalArticulos;
-            contadorDrawer.innerText = totalArticulos;
-
-            totalPrecioElemento.innerText = costeTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
+            if (contadorHeader) contadorHeader.innerText = totalArticulos;
+            if (contadorDrawer) contadorDrawer.innerText = totalArticulos;
+            if (totalPrecioElemento) totalPrecioElemento.innerText = costeTotal.toLocaleString('es-ES', { minimumFractionDigits: 2 }) + ' €';
         }
 
         const tarjetasGrado = document.querySelectorAll('.grade-option-card');
@@ -1812,6 +1695,8 @@
                 tarjeta.classList.add('active');
             });
         });
+
+    </script>
     </script>
     <script src="BarraBusqueda.js"></script>
     <script src="filtros.js"></script>
